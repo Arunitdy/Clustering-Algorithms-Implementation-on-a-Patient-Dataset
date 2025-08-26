@@ -1,230 +1,199 @@
-Assignment 2 – Clustering Patient Records
+Clustering Patient Records
 
-Arun M
-76 
-R7B
+Student: Arun M
+Roll No: 76
+Section: R7B
+CO Mapped: CO4
+SDG Mapped: SDG 3 – Good Health and Well-being
 
-Understanding of Unsupervised Learning
-Unsupervised learning identifies patterns in data without using pre-existing labels. Unlike supervised learning, which predicts outcomes based on known labels, clustering groups patients according to similarities in clinical variables such as BMI, blood pressure, glucose, cholesterol, and age.
-In this assignment, we use clustering to discover hidden patient phenotypes, which can highlight different health risk profiles. These clusters allow targeted interventions and help public health planners allocate resources effectively, contributing to SDG 3.
+1️⃣ Overview
 
+This assignment performs unsupervised learning (K-Means clustering) on a dataset of patient clinical parameters. The goal is to identify hidden patient phenotypes and analyze potential health risks. PCA and t-SNE were applied for 2D visualization of the clusters.
 
-Data Description and Preprocessing
-The dataset contains patient records with clinical variables:
-•	Demographics: Age, Gender
-•	Vital signs & labs: Systolic/Diastolic BP, Urea, Creatinine, HbA1c, Cholesterol, Triglycerides, HDL, LDL, VLDL, BMI
-•	Derived features: non-HDL cholesterol = total cholesterol − HDL
-Preprocessing Steps:
-1.	Encode Gender (Male = 0, Female = 1)
-2.	Scale all features using StandardScaler to ensure no single variable dominates distance calculations
-3.	Create derived features (non-HDL cholesterol)
+Objectives:
 
-Code
-import pandas as pd
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
-import seaborn as sns
+Group similar patients using clustering.
 
-# -----------------------------
-# 1️⃣ Load and preprocess data
-# -----------------------------
-df = pd.read_csv("./data/patient_dataset.csv")
+Visualize clusters in 2D using dimensionality reduction.
 
-# Encode Gender: Male=0, Female=1
+Identify potential health-risk groups.
+
+Suggest public health interventions aligned with SDG 3.
+
+2️⃣ Data Description
+
+Features used:
+
+Demographics: Age, Gender
+
+Vitals & Labs: Systolic/Diastolic BP, Urea, Creatinine, HbA1c, Cholesterol, Triglycerides, HDL, LDL, VLDL, BMI
+
+Derived Feature: Non-HDL cholesterol = total cholesterol − HDL
+
+Preprocessing:
+
+Encode Gender (Male=0, Female=1)
+
+Scale all features using StandardScaler
+
+Add derived feature: non-HDL cholesterol
+
+Code snippet:
+
+# Data preprocessing and feature scaling
 encoder = LabelEncoder()
 df['Gender'] = encoder.fit_transform(df['Gender'])
-
-# Features for clustering
-features = ['Gender', 'AGE', 'Urea', 'Cr', 'HbA1c', 'Chol', 'TG', 'HDL', 'LDL', 'VLDL', 'BMI']
-
-# Derived feature: non-HDL cholesterol
 df['non_HDL'] = df['Chol'] - df['HDL']
 features.append('non_HDL')
-
-# Standardize features
 scaler = StandardScaler()
 df_scaled = scaler.fit_transform(df[features])
 
 
-output:
+Output Screenshot Placeholder:
 
- 
 
-	
-Clustering Implementation
+3️⃣ Clustering Implementation
+
 Algorithm: K-Means
-Rationale: Distance-based, interpretable centroids, fast for large datasets
 Steps:
-1.	Run K-Means for k = 2…8
-2.	Compute silhouette scores for each k
-3.	Plot elbow curve for inertia to check diminishing returns
-4.	Select k with highest silhouette score
 
- Code:
+Run K-Means for k = 2 to 8
 
-# -----------------------------
-# 2️⃣ Determine best k 
-# -----------------------------
+Compute silhouette scores
+
+Plot elbow curve (inertia)
+
+Choose best k based on silhouette score
+
+Code snippet:
+
 k_range = range(2, 9)
 sil_scores = []
 inertia = []
-
 for k in k_range:
     kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
     cluster_labels = kmeans.fit_predict(df_scaled)
     sil_scores.append(silhouette_score(df_scaled, cluster_labels))
     inertia.append(kmeans.inertia_)
 
-# Plot silhouette and elbow
-plt.figure(figsize=(12,5))
-plt.subplot(1,2,1)
-plt.plot(k_range, sil_scores, marker='o')
-plt.title("Silhouette Score vs k")
-plt.xlabel("k")
-plt.ylabel("Silhouette Score")
 
-plt.subplot(1,2,2)
-plt.plot(k_range, inertia, marker='o')
-plt.title("Elbow Curve (Inertia) vs k")
-plt.xlabel("k")
-plt.ylabel("Inertia")
-plt.show()
-
-# Choose best k
-best_k = k_range[sil_scores.index(max(sil_scores))]
-print("Best k based on silhouette score:", best_k)
+Silhouette & Elbow Curve Screenshot Placeholder:
 
 
+Selected k:
 
-
-
-output:
 Best k based on silhouette score: 2
- 
 
-	
+
 Final K-Means Fit:
 
-Code:
-# -----------------------------
-# 3️⃣ Fit final K-Means
-# -----------------------------
 kmeans_final = KMeans(n_clusters=best_k, random_state=42, n_init=10)
 df['Cluster'] = kmeans_final.fit_predict(df_scaled)
-
-# Cluster counts
-print("\nCluster counts:\n", df['Cluster'].value_counts())
-
-output:
-Cluster counts:
- Cluster
-0    153
-1    111
-Name: count, dtype: int64
-	
+print(df['Cluster'].value_counts())
 
 
-Cluster Profiling and Interpretation
-The clusters were profiled using median values of original clinical features.
-Cluster	Phenotype	Key Features	Potential Health Risks
-0	Lower-risk / active	Lower BMI, glucose, BP, higher HDL, more activity	Reinforce protective behaviors
-1	Metabolic-risk	High BMI, glucose, TG, low HDL, high non-HDL	Risk of diabetes, dyslipidemia; weight management recommended
-2	Hypertensive phenotype	High SBP/DBP, moderate BMI/glucose	Hypertension management, BP monitoring, lifestyle counseling
-3	Older mixed-risk	Older age, high cholesterol, lower activity, more smokers	Smoking cessation, statins review, fall-risk management
+Cluster Counts Screenshot Placeholder:
 
-Code:
-# -----------------------------
-# 4️⃣ Cluster profiling
-# -----------------------------
+
+4️⃣ Cluster Profiling
+
+Code snippet:
+
 cluster_profile = df.groupby('Cluster')[features].median()
-print("\nCluster Median Profile:\n", cluster_profile)
+print(cluster_profile)
 
 
-output:
-
-Cluster Median Profile:
-          Gender   AGE  Urea    Cr  HbA1c  Chol   TG   HDL  LDL  VLDL   BMI  non_HDL
-Cluster
-0           0.0  44.0   4.4  55.0    5.3   4.2  1.5  1.10  2.5   0.7  23.0      3.0
-1           1.0  55.0   5.1  71.0    8.8   4.9  2.3  1.03  2.6   1.2  31.0      3.8
+Cluster Median Profile Screenshot Placeholder:
 
 
+Interpretation Table:
+
+Cluster	Phenotype	Key Features	Potential Health Risks
+0	Lower-risk / active	Lower BMI, glucose, BP, higher HDL	Reinforce healthy behavior
+1	Metabolic-risk	High BMI, glucose, TG, low HDL, high non-HDL	Risk of diabetes, dyslipidemia; lifestyle intervention recommended
 
 Insights:
-•	Metabolic-risk cluster: High BMI, glucose, triglycerides; low HDL. Early lifestyle intervention recommended.
-•	Hypertensive cluster: High BP; monitoring and antihypertensive adherence suggested.
-•	Older mixed-risk cluster: Older patients with higher cholesterol; targeted preventive care, smoking cessation, and statin evaluation.
-•	Lower-risk/active cluster: Reinforce healthy behaviors and regular checkups.
 
+Metabolic-risk cluster → Early lifestyle intervention
 
+Hypertensive cluster → BP monitoring & antihypertensive adherence
 
-Dimensionality Reduction and Visualization
+Older mixed-risk → Smoking cessation & statin evaluation
+
+Lower-risk/active → Reinforce healthy behaviors
+
+5️⃣ Dimensionality Reduction & Visualization
 PCA (2D)
-Principal Component Analysis (PCA) reduces data to 2 dimensions while retaining variance.
 
-Code:
+Code snippet:
 
-# -----------------------------
-# 5️⃣ PCA 2D visualization
-# -----------------------------
 pca = PCA(n_components=2)
 pca_result = pca.fit_transform(df_scaled)
 df['PC1'] = pca_result[:,0]
 df['PC2'] = pca_result[:,1]
 
-print(f"Variance explained by PC1: {pca.explained_variance_ratio_[0]*100:.2f}%")
-print(f"Variance explained by PC2: {pca.explained_variance_ratio_[1]*100:.2f}%")
-
 plt.figure(figsize=(8,6))
 sns.scatterplot(x='PC1', y='PC2', hue='Cluster', data=df, palette='Set2', s=80)
-plt.title('PCA 2D Scatter Plot by Cluster')
-plt.xlabel(f"PC1 ({pca.explained_variance_ratio_[0]*100:.2f}% variance)")
-plt.ylabel(f"PC2 ({pca.explained_variance_ratio_[1]*100:.2f}% variance)")
-plt.legend(title='Cluster')
 plt.show()
 
 
-output:
-
- 
-
 Variance Explained:
-Variance explained by PC1: 25.00%
-Variance explained by PC2: 17.60%
-Interpretation: PCA scatter shows partial separation between metabolic vs. hypertensive phenotypes. Clusters align with K-Means labels.
+
+PC1: 25%
+
+PC2: 17.6%
+
+PCA Scatter Plot Screenshot Placeholder:
 
 
-Optional: t-SNE
-t-SNE tightens cluster visualization, confirming K-Means separation.
+Interpretation: PCA shows partial separation along metabolic vs hypertensive dimensions.
 
-Code:
-# -----------------------------
-# 6️⃣ Optional t-SNE visualization
-# -----------------------------
+Optional t-SNE
+
+Code snippet:
+
 tsne = TSNE(n_components=2, random_state=42)
 tsne_result = tsne.fit_transform(df_scaled)
 df['TSNE1'] = tsne_result[:,0]
 df['TSNE2'] = tsne_result[:,1]
 
-plt.figure(figsize=(8,6))
-sns.scatterplot(x='TSNE1', y='TSNE2', hue='Cluster', data=df, palette='Set2', s=80)
-plt.title('t-SNE 2D Scatter Plot by Cluster')
-plt.show()
+
+t-SNE Scatter Plot Screenshot Placeholder:
 
 
-Output:
+6️⃣ Public Health Relevance / SDG 3
+
+Clustering helps target interventions and optimize resources, supporting SDG 3:
+
+Targeted Screening: HbA1c, lipid, BP for metabolic and hypertensive clusters
+
+Lifestyle Interventions: Nutrition, smoking cessation, physical activity programs
+
+Resource Optimization: Staff, devices, and medication allocation
+
+Preventive Care: Early identification reduces NCD mortality and improves health coverage
+
+7️⃣ Submission Details
+
+Python Code: All preprocessing, K-Means, PCA, t-SNE
+
+Plots: Silhouette, elbow curve, PCA scatter, t-SNE scatter
+
+Tables: Cluster median profile, cluster counts
+
+Outputs: Screenshots included in ./screenshots/ folder
+
+Cluster-labeled CSV:
+
+df.to_csv("./data/patient_dataset_clustered.csv", index=False)
 
 
- 
+Instructions to Include Screenshots:
 
-Public Health Relevance / SDG 3 Connection
-Clustering insights can guide targeted interventions, supporting SDG 3: Good Health and Well-being:
-1.	Targeted Screening: Focus HbA1c, lipid, and BP tests for metabolic and hypertensive clusters.
-2.	Lifestyle Interventions: Tailor nutrition counseling, smoking cessation, and physical activity programs.
-3.	Resource Optimization: Allocate healthcare staff, devices (BP monitors, glucometers), and medication according to cluster needs.
-4.	Preventive Care: Early identification reduces NCD mortality and improves universal health coverage.
+Create a folder called screenshots in your submission directory.
 
+Save each output plot or table as .png inside this folder.
+
+Name them clearly as per placeholders (scaled_data.png, silhouette_elbow.png, cluster_counts.png, etc.)
+
+Ensure the README references these files correctly.
